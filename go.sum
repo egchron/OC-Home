@@ -1,0 +1,6 @@
+github.com/beevik/timerqueue v0.0.0-20180805204454-68dbdbadc54b h1:OQhN/VkfvoG31FiwaL1IAD3ssnxaf9nvILxcAZ/+dKs=
+github.com/beevik/timerqueue v0.0.0-20180805204454-68dbdbadc54b/go.mod h1:RDhRVuqY9wYG0XsebeECfW1RxFTUMNgz0d/CRnyMr8I=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03 h1:pd4YKIqCB0U7O2I4gWHgEUA2mCEOENmco0l/bM957bU=
+github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03/go.mod h1:Z9+Ul5bCbBKnbCvdOWbLqTHhJiYV414CURZJba6L8qA=
