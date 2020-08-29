@@ -6,6 +6,7 @@ import (
 
 	"okumoto.net/cliutil"
 	"okumoto.net/controller"
+	"okumoto.net/db/mysqldb"
 	"okumoto.net/valvebox"
 
 	"github.com/go-co-op/gocron"
@@ -33,6 +34,20 @@ func CmdMain(args []string) int {
 	}
 
 	//==================================================
+	// Setup DB
+	//==================================================
+	database, err := mysqldb.New(cli.DB)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := database.MaybeSetupDB("db/mysqldb/schema.sql"); err != nil {
+		log.Fatal(err)
+	}
+
+	maybeSetupConfig(database)
+
+	//==================================================
 	// Setup Hardware
 	//==================================================
 	vb := valvebox.New("backyard")
@@ -42,27 +57,36 @@ func CmdMain(args []string) int {
 		log.Fatal(err)
 	}
 
-	// The stuff here should be read in from some sort of
-	// configuration file.
-	relayNames := []string{
-		"GrassHouse",
-		"GrassFence",
-		"PlanterBoxes",
-		"Drip",
+	relayList, err := database.GetRelays()
+	if err != nil {
+		log.Fatal(err)
 	}
-	for i, name := range relayNames {
-		vb.AddRelay(name, rb, i)
+	for i, r := range relayList {
+		vb.NewRelay(r.Name, rb, i)
 	}
 
-	stationNames := []string{
-		"GrassHouse",
-		"GrassFence",
-		"PlanterBoxes",
-		"Drip",
+	stationList, err := database.GetStations()
+	if err != nil {
+		log.Fatal(err)
 	}
-	for _, name := range stationNames {
-		relayName := name
-		vb.AddStation(name, []string{relayName}, time.Second)
+	for _, s := range stationList {
+		vb.NewStation(s.Name, time.Second)
+	}
+
+	linkList, err := database.GetSRLinks()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, sr := range linkList {
+		station, err := database.GetStationById(sr.Station)
+		if err != nil {
+			log.Fatal(err)
+		}
+		relay, err := database.GetRelayById(sr.Relay)
+		if err != nil {
+			log.Fatal(err)
+		}
+		vb.AddRelay(station.Name, relay.Name)
 	}
 
 	//==================================================
@@ -71,6 +95,7 @@ func CmdMain(args []string) int {
 	c := controller.Controller{
 		ValveBox:  vb,
 		Scheduler: gocron.NewScheduler(time.Local),
+		Db:        database,
 	}
 
 	c.MainLoop()

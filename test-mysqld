@@ -1,0 +1,74 @@
+#!/bin/sh
+#
+# Start test a MySQLd server in a container.
+#
+
+DOCKER=podman
+
+trap cleanup EXIT
+trap cleanup INT
+
+cleanup() {
+	if [ "${MYSQL_CONTAINER}" != "" ]; then
+		${DOCKER} rm -f "${MYSQL_CONTAINER}"
+	fi
+}
+
+pingMySQLd() {
+        /usr/bin/mysqladmin \
+                --password=${MYSQL_PWD} \
+                --connect-timeout=30 \
+                --protocol=tcp \
+                --user=${MYSQL_USER} \
+                ping 2> /dev/null
+}
+
+# Use existing container instead of starting a new one.
+if [ "${MYSQL_CONTAINER}" != "" ]; then
+	if [ $# -eq 0 ]; then
+		exit 0
+	else
+		exec "$@"
+	fi
+fi
+
+# Setup environment and then start container for MySQLd
+export MYSQL_HOST=localhost
+export MYSQL_PWD=my-secret-pw
+export MYSQL_USER=root
+
+export MYSQL_CONTAINER=$( \
+        ${DOCKER} run \
+                --name some-mariadb \
+                -e MYSQL_ROOT_PASSWORD=${MYSQL_PWD} \
+                -d \
+                --publish-all \
+                mariadb:latest)
+
+export MYSQL_TCP_PORT=$( \
+        ${DOCKER} inspect ${MYSQL_CONTAINER} \
+                --format='{{(index .NetworkSettings.Ports "3306/tcp" 0).HostPort}}')
+
+# Wait until MySQLd is providing service.
+while ! pingMySQLd; do
+        sleep 1
+done
+
+mysql() {
+        /usr/bin/mysql \
+                --password=${MYSQL_PWD} \
+                --connect-timeout=30 \
+                --protocol=tcp \
+                --user=${MYSQL_USER} \
+                --wait \
+                "$@"
+}
+export -f mysql
+
+if [ $# -eq 0 ]; then
+        export PS1="mysql-container% "
+        ${SHELL}
+else
+        "$@"
+fi
+

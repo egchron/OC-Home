@@ -6,9 +6,11 @@ import (
 	"sync"
 	"time"
 
+	"okumoto.net/db"
 	"okumoto.net/valvebox"
 
 	"github.com/go-co-op/gocron"
+	"github.com/pkg/errors"
 )
 
 type Controller struct {
@@ -16,29 +18,32 @@ type Controller struct {
 
 	ValveBox  *valvebox.ValveBox
 	Scheduler *gocron.Scheduler
+	Db        db.DB
 }
 
 func (c *Controller) MainLoop() {
 
 	c.Scheduler.StartAsync()
 
-	c.Scheduler.Every(1).Day().Do(c.DayLoop)
+	//c.Scheduler.Every(1).Day().Do(c.DayLoop)
+	c.Scheduler.Every(20).Second().Do(c.DayLoop)
 
 	c.Scheduler.StartBlocking()
 }
 
-func (c *Controller) DayLoop() {
+func (c *Controller) DayLoop() error {
 
-	stationNames := []string{
-		"GrassHouse",
-		"GrassFence",
-		"PlanterBoxes",
-		"Drip",
+	sList, err := c.Db.GetStations()
+	if err != nil {
+		return errors.Wrap(err, "DayLoop GetStations")
 	}
-	for _, stationName := range stationNames {
-		fmt.Printf("Station: %s\n", stationName)
-		c.CycleStation(stationName, 4*time.Second)
+	for _, s := range sList {
+		dur := s.Budget / 7
+		fmt.Printf("Station: %s\n", s.Name)
+		c.CycleStation(s.Name, dur*time.Second)
 	}
+
+	return nil
 }
 
 func (c *Controller) CycleStation(stationName string, dur time.Duration) {

@@ -47,8 +47,8 @@ func New(name string) *ValveBox {
 	return &m
 }
 
-// AddRelay registers a relay.
-func (v *ValveBox) AddRelay(name string, board RelayBoard, id int) {
+// NewRelay registers a relay.
+func (v *ValveBox) NewRelay(name string, board RelayBoard, id int) {
 	v.relays[name] = &Relay{
 		Name:  name,
 		board: board,
@@ -56,20 +56,22 @@ func (v *ValveBox) AddRelay(name string, board RelayBoard, id int) {
 	}
 }
 
-// AddStation registers a station and the relays used to activate the
+// NewStation registers a station and the relays used to activate the
 // control valve.
-func (v *ValveBox) AddStation(name string,
-	relayList []string, offLatancy time.Duration) {
+func (v *ValveBox) NewStation(name string, offLatancy time.Duration) {
 
-	relays := []*Relay{}
-	for _, relayName := range relayList {
-		relays = append(relays, v.relays[relayName])
-	}
 	v.stations[name] = &Station{
 		Name:       name,
-		relays:     relays,
+		relays:     []*Relay{},
 		offLatancy: offLatancy,
 	}
+}
+
+func (v *ValveBox) AddRelay(station, relay string) {
+
+	v.stations[station].relays = append(
+		v.stations[station].relays,
+		v.relays[relay])
 }
 
 // State changes the state of a station.
