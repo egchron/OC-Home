@@ -2,14 +2,10 @@ package server
 
 import (
 	"log"
-	"time"
 
 	"okumoto.net/cliutil"
-	"okumoto.net/config"
 	"okumoto.net/controller"
 	"okumoto.net/valvebox"
-
-	"github.com/beevik/timerqueue"
 )
 
 // Goals:
@@ -33,6 +29,9 @@ func CmdMain(args []string) int {
 		log.Fatal(err)
 	}
 
+	//==================================================
+	// Setup Hardware
+	//==================================================
 	n := &valvebox.Numato{
 		DevName: cli.DevName,
 	}
@@ -51,16 +50,11 @@ func CmdMain(args []string) int {
 		vb.Add(i, name)
 	}
 
-	config := config.New(vb)
+	//==================================================
+	// Setup Controller
+	//==================================================
+	c := controller.Controller{}
 
-	c := controller.Controller{
-		Queue: timerqueue.New(),
-	}
-	c.Setup(config, time.Now())
-
-	/*
-	 * Work starts here.
-	 */
 	c.MainLoop()
 
 	return cliutil.ExitOk
