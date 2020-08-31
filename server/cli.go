@@ -1,8 +1,7 @@
 package server
 
 import (
-	"flag"
-
+	"github.com/jnovack/flag"
 	"github.com/pkg/errors"
 )
 

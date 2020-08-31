@@ -26,7 +26,7 @@ func CmdMain(args []string) int {
 
 	cli := Cli{}
 	if err := cli.ParseArgsEnv(args); err != nil {
-		log.Fatal(err)
+		log.Fatalf("cli: %+v", err)
 	}
 
 	//==================================================
