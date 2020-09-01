@@ -2,10 +2,13 @@ package server
 
 import (
 	"log"
+	"time"
 
 	"okumoto.net/cliutil"
 	"okumoto.net/controller"
 	"okumoto.net/valvebox"
+
+	"github.com/go-co-op/gocron"
 )
 
 // Goals:
@@ -66,7 +69,8 @@ func CmdMain(args []string) int {
 	// Setup Controller
 	//==================================================
 	c := controller.Controller{
-		ValveBox: vb,
+		ValveBox:  vb,
+		Scheduler: gocron.NewScheduler(time.Local),
 	}
 
 	c.MainLoop()
