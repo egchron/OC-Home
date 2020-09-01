@@ -32,11 +32,12 @@ func CmdMain(args []string) int {
 	//==================================================
 	// Setup Hardware
 	//==================================================
-	n := &valvebox.Numato{
-		DevName: cli.DevName,
-	}
+	vb := valvebox.New("backyard")
 
-	vb := valvebox.New(n)
+	rb := &valvebox.Numato{}
+	if err := rb.Open(cli.DevName); err != nil {
+		log.Fatal(err)
+	}
 
 	// The stuff here should be read in from some sort of
 	// configuration file.
@@ -47,13 +48,26 @@ func CmdMain(args []string) int {
 		"Drip",
 	}
 	for i, name := range relayNames {
-		vb.Add(i, name)
+		vb.AddRelay(name, rb, i)
+	}
+
+	stationNames := []string{
+		"GrassHouse",
+		"GrassFence",
+		"PlanterBoxes",
+		"Drip",
+	}
+	for _, name := range stationNames {
+		relayName := name
+		vb.AddStation(name, []string{relayName}, time.Second)
 	}
 
 	//==================================================
 	// Setup Controller
 	//==================================================
-	c := controller.Controller{}
+	c := controller.Controller{
+		ValveBox: vb,
+	}
 
 	c.MainLoop()
 
